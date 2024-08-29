@@ -4,22 +4,31 @@ import Link from 'next/link'
 import dbConnect from '../../lib/dbConnect'
 import Pet from '../../models/Pet'
 
+// Function to validate ID (example for MongoDB ObjectId)
+const isValidObjectId = (id) => /^[a-fA-F0-9]{24}$/.test(id);
+
 /* Allows you to view pet card info and delete pet card*/
 const PetPage = ({ pet }) => {
-  const router = useRouter()
-  const [message, setMessage] = useState('')
+  const router = useRouter();
+  const [message, setMessage] = useState('');
+
   const handleDelete = async () => {
-    const petID = router.query.id
+    const petID = router.query.id;
+
+    if (!isValidObjectId(petID)) {
+      setMessage('Invalid Pet ID');
+      return;
+    }
 
     try {
       await fetch(`/api/pets/${petID}`, {
-        method: 'Delete',
-      })
-      router.push('/')
+        method: 'DELETE',
+      });
+      router.push('/');
     } catch (error) {
-      setMessage('Failed to delete the pet.')
+      setMessage('Failed to delete the pet.');
     }
-  }
+  };
 
   return (
     <div key={pet._id}>
@@ -60,16 +69,16 @@ const PetPage = ({ pet }) => {
       </div>
       {message && <p>{message}</p>}
     </div>
-  )
-}
+  );
+};
 
 export async function getServerSideProps({ params }) {
-  await dbConnect()
+  await dbConnect();
 
-  const pet = await Pet.findById(params.id).lean()
-  pet._id = pet._id.toString()
+  const pet = await Pet.findById(params.id).lean();
+  pet._id = pet._id.toString();
 
-  return { props: { pet } }
+  return { props: { pet } };
 }
 
-export default PetPage
+export default PetPage;
